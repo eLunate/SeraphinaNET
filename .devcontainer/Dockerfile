@@ -31,6 +31,10 @@ RUN apt-get update \
     && echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME\
     && chmod 0440 /etc/sudoers.d/$USERNAME \
     #
+    # Add EF tools
+    && dotnet tool install --global dotnet-ef \
+    && echo $'export PATH=$PATH:$HOME/.dotnet/tools' >> ~/.bash_profile \
+    #
     # Clean up
     && apt-get autoremove -y \
     && apt-get clean -y \
