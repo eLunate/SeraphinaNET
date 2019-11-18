@@ -8,10 +8,12 @@ namespace SeraphinaNET.Data {
     }
 
     public interface DataContext : IDisposable {
+        #region Pins
         Task<ulong[]> GetPins(ulong channel);
         Task ClearPins(ulong channel);
         Task AddPin(ulong channel, ulong message);
         Task RemovePin(ulong channel, ulong message);
         Task<bool> IsPinned(ulong channel, ulong message);
+        #endregion
     }
 }
