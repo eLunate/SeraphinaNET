@@ -31,8 +31,8 @@ namespace SeraphinaNET {
             var commandService = services.GetRequiredService<CommandService>();
             commandService.Log += Log;
             commandService.CommandExecuted += CommandExecuted;
-            commandService.AddModuleAsync<Commands.BasicCommands>(_services);
-            commandService.AddModuleAsync<Commands.PinCommands>(_services);
+            commandService.AddModuleAsync<Commands.BasicCommands>(services);
+            commandService.AddModuleAsync<Commands.PinCommands>(services);
         }
         
         public async Task Connect(string token) {
