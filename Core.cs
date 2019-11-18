@@ -5,13 +5,14 @@
 using Discord;
 using SeraphinaNET.Data;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
+using Discord.Commands;
+using Discord.WebSocket;
 using System;
 
 namespace SeraphinaNET {
     class SeraphinaCore : IDisposable {
         private readonly DataContextFactory data;
-        // Should probably move away from a concrete type here.
-        // Only reason it's supplied externally anyway.
         private readonly DiscordSocketClient discord;
 
         // This is IDisposable, and it's going to give me a seizure at this rate.
@@ -21,10 +22,13 @@ namespace SeraphinaNET {
             this.discord = discord;
             this.data = data;
             this.services = new ServiceCollection()
-            .AddSingleton<DiscordSocketClient>(discord)
+            .AddSingleton(discord)
+            .AddSingleton(data)
             .AddSingleton<CommandService>()
+            .AddSingleton<PinService>()
             .BuildServiceProvider();
 
+            
             discord.Log += Log;
             discord.MessageReceived += MessageReceived;
 
@@ -33,11 +37,15 @@ namespace SeraphinaNET {
             commandService.CommandExecuted += CommandExecuted;
             commandService.AddModuleAsync<Commands.BasicCommands>(services);
             commandService.AddModuleAsync<Commands.PinCommands>(services);
+            
         }
         
+        public async Task Connect() {
+            await discord.StartAsync();
+        }
         public async Task Connect(string token) {
             await discord.LoginAsync(TokenType.Bot, token);
-            await discord.StartAsync();
+            await Connect();
         }
         private static Task Log(LogMessage msg) {
             Console.WriteLine(msg.ToString());
@@ -51,6 +59,7 @@ namespace SeraphinaNET {
 
             var argPos = 0;
             if (userMessage.HasCharPrefix('!', ref argPos) || userMessage.HasMentionPrefix(discord.CurrentUser, ref argPos)) {
+                // This cast is safe because this event is only attached if the client is a socket client.
                 var ctx = new SocketCommandContext(discord, userMessage);
                 await services.GetRequiredService<CommandService>().ExecuteAsync(ctx, argPos, services);
                 return;
