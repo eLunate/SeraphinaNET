@@ -1,6 +1,7 @@
 ﻿using System.Threading.Tasks;
 using System;
 using Discord.WebSocket;
+using SeraphinaNET.Data;
 
 namespace SeraphinaNET
 {
@@ -10,9 +11,11 @@ namespace SeraphinaNET
             MainAsync().GetAwaiter().GetResult();
         }
         public static async Task MainAsync() {
-            throw new NotImplementedException();
-            //var data;
-            var discord = new DiscordSocketClient(); // I don't have code completion
+            var data = new MongoData(
+                Environment.GetEnvironmentVariable("DB_STRING") ?? throw new InvalidOperationException("DB_STRING not in environment"), 
+                Environment.GetEnvironmentVariable("DB_NAME") ?? "dev"
+            );
+            var discord = new DiscordSocketClient(); 
             using var seraphina = new SeraphinaCore(discord, data);
             await seraphina.Connect(Environment.GetEnvironmentVariable("BOT_TOKEN") ?? throw new InvalidOperationException("BOT_TOKEN not in environment"));
 
