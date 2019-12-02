@@ -18,10 +18,8 @@ namespace SeraphinaNET {
     }
     public sealed class PinService {
         private readonly DataContextFactory data;
-        private readonly IDiscordClient client;
-        public PinService(DataContextFactory data, IDiscordClient client) {
+        public PinService(DataContextFactory data) {
             this.data = data;
-            this.client = client;
         }
 
         public async Task ClearPins(IMessageChannel channel) {
