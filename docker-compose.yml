@@ -1,0 +1,12 @@
+version: '3.4'
+
+services:
+  seraphinanet:
+    image: ${DOCKER_REGISTRY-}seraphinanet
+    build:
+      context: .
+      dockerfile: Dockerfile
+    links:
+      - database
+  database:
+    image: ${DOCKER_REGISTRY-}mongo

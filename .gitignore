@@ -2,3 +2,4 @@
 /bin/
 .vscode/
 .vs/
+docker-compose.override.yml
