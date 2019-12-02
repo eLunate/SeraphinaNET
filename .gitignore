@@ -3,3 +3,7 @@
 .vscode/
 .vs/
 docker-compose.override.yml
+Properties/
+*.csproj.user
+*.sln
+*.dcproj
