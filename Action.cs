@@ -18,7 +18,7 @@ namespace SeraphinaNET {
         public abstract IEmote[] Emotes { get; }
     }
 
-    public class ActionService {
+    public sealed class ActionService {
         private readonly DataContextFactory data;
 
         private static IEmote GetEmote(string emoteStr) {
@@ -124,7 +124,7 @@ namespace SeraphinaNET {
             protected abstract Task Action(SocketReaction reaction);
         }
 
-        private class ButtonTest : ButtonAction {
+        private sealed class ButtonTest : ButtonAction {
             private static readonly IEmote[] _emotes = new IEmote[] {
                 new Emoji("✅")
             };
