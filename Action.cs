@@ -27,33 +27,26 @@ namespace SeraphinaNET {
         }
 
         private abstract class RadioAction : Action {
-            // private readonly HashSet<(ulong, ulong)> cache = new HashSet<(ulong, ulong)>();
-            private readonly DataContextFactory data;
-
-            protected RadioAction(DataContextFactory data) : base() {
-                this.data = data;
-            }
-
             public async sealed override Task ActionOn(ActionData action, SocketReaction reaction) {
                 if (!await ToggleOn(reaction)) {
-                    if(!((reaction.Message.Value ?? await reaction.Channel.GetMessageAsync(reaction.MessageId)) is IUserMessage message)) {
+                    if(!((reaction.Message.IsSpecified ? reaction.Message.Value : await reaction.Channel.GetMessageAsync(reaction.MessageId)) is IUserMessage message)) {
                         Console.WriteLine("Can't do radio actions on non-user messages");
                         return;
                     }
                     // I should be able to do this without getting the full user object and this infuriates me.
-                    await message.RemoveReactionAsync(reaction.Emote, reaction.User.Value ?? await reaction.Channel.GetUserAsync(reaction.UserId));
+                    await message.RemoveReactionAsync(reaction.Emote, reaction.User.IsSpecified ? reaction.User.Value : await reaction.Channel.GetUserAsync(reaction.UserId));
                     return;
                 }
                 var radio = await action.GetRadioData(reaction.UserId);
                 await action.SetRadioData(reaction.UserId, reaction.Emote.ToString()); // All IEmote can be deserialized from this format
                 if (radio != null) {
                     var emote = GetEmote(radio);
-                    if (!((reaction.Message.Value ?? await reaction.Channel.GetMessageAsync(reaction.MessageId)) is IUserMessage message)) {
+                    if (!((reaction.Message.IsSpecified ? reaction.Message.Value : await reaction.Channel.GetMessageAsync(reaction.MessageId)) is IUserMessage message)) {
                         Console.WriteLine("Can't do radio actions on non-user messages");
                         return;
                     }
                     var toggle = ToggleOff(reaction.Channel, message, reaction.UserId, emote);
-                    await message.RemoveReactionAsync(reaction.Emote, reaction.User.Value ?? await reaction.Channel.GetUserAsync(reaction.UserId));
+                    await message.RemoveReactionAsync(reaction.Emote, reaction.User.IsSpecified ? reaction.User.Value : await reaction.Channel.GetUserAsync(reaction.UserId));
                     await toggle;
                 } 
             }
@@ -82,11 +75,11 @@ namespace SeraphinaNET {
             public async sealed override Task ActionOn(ActionData action, SocketReaction reaction) {
                 var tally = (await action.GetTallyData(reaction.UserId)).Select(x => GetEmote(x)).ToArray();
                 if (!await ToggleOn(tally, reaction)) {
-                    if (!((reaction.Message.Value ?? await reaction.Channel.GetMessageAsync(reaction.MessageId)) is IUserMessage message)) {
+                    if (!((reaction.Message.IsSpecified ? reaction.Message.Value : await reaction.Channel.GetMessageAsync(reaction.MessageId)) is IUserMessage message)) {
                         Console.WriteLine("Can't do toggle actions on non-user messages");
                         return;
                     }
-                    await message.RemoveReactionAsync(reaction.Emote, reaction.User.Value ?? await reaction.Channel.GetUserAsync(reaction.UserId));
+                    await message.RemoveReactionAsync(reaction.Emote, reaction.User.IsSpecified ? reaction.User.Value : await reaction.Channel.GetUserAsync(reaction.UserId));
                     return;
                 }
                 await action.AddTally(reaction.UserId, reaction.Emote.ToString() ?? throw new ArgumentNullException("Reaction emote has null name somehow. Asshole emote."));
@@ -100,7 +93,7 @@ namespace SeraphinaNET {
                 }
                 if (tally.Contains(reaction.Emote)) {
                     await Task.WhenAll(
-                        ToggleOff(tally, reaction.Channel, reaction.Message.Value ?? (IUserMessage)(await reaction.Channel.GetMessageAsync(reaction.MessageId)), reaction.UserId, reaction.Emote),
+                        ToggleOff(tally, reaction.Channel, reaction.Message.IsSpecified ? reaction.Message.Value : (IUserMessage)(await reaction.Channel.GetMessageAsync(reaction.MessageId)), reaction.UserId, reaction.Emote),
                         action.RemoveTally(reaction.UserId, reaction.Emote.ToString() ?? throw new ArgumentNullException("Reaction emote has null name and it hurts the soul."))
                     ); 
                 } // Seraphina removed the reaction otherwise so it's all good?
@@ -113,7 +106,7 @@ namespace SeraphinaNET {
         private abstract class ButtonAction : Action {
             public async sealed override Task ActionOn(ActionData action, SocketReaction reaction) {
                 var actTask = this.Action(reaction);
-                if ((reaction.Message.Value ?? await reaction.Channel.GetMessageAsync(reaction.MessageId)) is IUserMessage message) {
+                if ((reaction.Message.IsSpecified ? reaction.Message.Value : await reaction.Channel.GetMessageAsync(reaction.MessageId)) is IUserMessage message) {
                     await message.RemoveReactionAsync(reaction.Emote, reaction.User.Value ?? await reaction.Channel.GetUserAsync(reaction.UserId));
                 }
                 await actTask;
@@ -130,7 +123,7 @@ namespace SeraphinaNET {
             };
             public sealed override IEmote[] Emotes => _emotes;
 
-            protected sealed override Task Action(SocketReaction reaction) => reaction.Message.Value?.DeleteAsync() ?? Task.CompletedTask;
+            protected sealed override Task Action(SocketReaction reaction) => reaction.Channel.DeleteMessageAsync(reaction.MessageId);
         }
 
         public ActionService(DataContextFactory data) { this.data = data; }
@@ -160,18 +153,18 @@ namespace SeraphinaNET {
             return actions[aliases[actionAlias]];
         }
 
-        public async Task HandleReactionAdd(SocketReaction reaction) {
+        public async Task HandleReactionAdd(Cacheable<IUserMessage, ulong> message, ISocketMessageChannel channel, SocketReaction reaction) {
             if (reaction.User.IsSpecified && reaction.User.Value.IsBot) return;
             using var db = data.GetContext();
-            var actionData = await db.GetAction(reaction.MessageId);
+            var actionData = await db.GetAction(message.Id);
             if (actionData == null) return;
             var action = GetAction(actionData);
             if (action.ValidateEmote(reaction.Emote)) await action.ActionOn(actionData, reaction);
         }
 
-        public async Task HandleReactionRemove(SocketReaction reaction) {
+        public async Task HandleReactionRemove(Cacheable<IUserMessage, ulong> message, ISocketMessageChannel channel, SocketReaction reaction) {
             using var db = data.GetContext();
-            var actionData = await db.GetAction(reaction.MessageId);
+            var actionData = await db.GetAction(message.Id);
             if (actionData == null) return;
             var action = GetAction(actionData);
             if (action.ValidateEmote(reaction.Emote)) await action.ActionOff(actionData, reaction);
