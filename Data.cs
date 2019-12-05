@@ -53,5 +53,6 @@ namespace SeraphinaNET.Data {
         public ulong TopicRole { get; }
         public ulong TopicChannel { get; }
         public string? TopicEmote { get; }
+        public ulong TopicGuild { get; }
     }
 }
