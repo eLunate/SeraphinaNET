@@ -28,9 +28,12 @@ namespace SeraphinaNET.Data {
         #endregion
 
         #region Topics
+        // Topics as self-assignable roles just makes way more sense.
         public Task<TopicData[]> GetTopics(ulong guild);
-        public Task AddTopic(ulong guild, ulong channel, string name, string? emote);
-        public Task RemoveTopic(ulong guild, ulong channel);
+        public Task<TopicData?> GetTopicByName(ulong guild, string name);
+        public Task<TopicData?> GetTopicByEmote(ulong guild, string emote);
+        public Task AddTopic(ulong guild, ulong role, string name, string? emote);
+        public Task RemoveTopic(ulong guild, ulong role);
         #endregion
     }
 
@@ -45,7 +48,7 @@ namespace SeraphinaNET.Data {
 
     public interface TopicData {
         public string TopicName { get; }
-        public ulong TopicChannel { get; }
+        public ulong TopicRole { get; }
         public string? TopicEmote { get; }
     }
 }
