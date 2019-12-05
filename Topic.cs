@@ -32,10 +32,19 @@ namespace SeraphinaNET {
             var role = user.Guild.GetRole(topic.TopicRole);
             return user.AddRoleAsync(role);
         }
-
         public Task RemoveUser(TopicData topic, IGuildUser user) {
             var role = user.Guild.GetRole(topic.TopicRole);
             return user.RemoveRoleAsync(role);
+        }
+
+        public Task AddTopic(ulong guild, ulong channel, ulong role, string name, string? emote) {
+            using var db = data.GetContext();
+            return db.AddTopic(guild, channel, role, name, emote);
+        }
+        public Task AddTopic(IGuildChannel channel, IRole role, string name, string? emote = null) => AddTopic(channel.GuildId, channel.Id, role.Id, name, emote);
+        public Task RemoveTopic(TopicData topic) {
+            using var db = data.GetContext();
+            return db.RemoveTopic(topic.TopicGuild, topic.TopicChannel);
         }
     }
 }
