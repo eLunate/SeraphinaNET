@@ -30,6 +30,10 @@ namespace SeraphinaNET.Data {
         // So the factory holds this and calls it a day.
         public void Dispose() { }
 
+        #region Data Mappings
+        // The nullability of fields is really just for me. I assert it though usage rather than
+        // through implementation or contract. It could be wrong.
+        #nullable disable warnings
         [BsonIgnoreExtraElements]
         private class DBChannelInfo {
             // Mongo uses _id
@@ -50,6 +54,22 @@ namespace SeraphinaNET.Data {
             [BsonElement("tally")]
             public Dictionary<string, string[]> Tally { get; set; }
         }
+
+        [BsonIgnoreExtraElements]
+        private class DBTopicInfo : TopicData {
+            [BsonElement("role")]
+            public ulong TopicRole { get; set; }
+            [BsonElement("guild")]
+            public ulong TopicGuild { get; set; }
+            [BsonElement("name")]
+            public string TopicName { get; set; }
+            [BsonId]
+            public ulong TopicChannel { get; set; }
+            [BsonElement("emote")]
+            public string? TopicEmote { get; set; }
+        }
+        #nullable restore warnings
+        #endregion
 
         private class DBActionController : ActionData {
             private readonly IMongoDatabase db;
@@ -86,6 +106,7 @@ namespace SeraphinaNET.Data {
         static MongoDataContext() { 
             BsonClassMap.RegisterClassMap<DBChannelInfo>();
             BsonClassMap.RegisterClassMap<DBActionInfo>();
+            BsonClassMap.RegisterClassMap<DBTopicInfo>();
         }
 
         #region impl Pin
@@ -131,6 +152,39 @@ namespace SeraphinaNET.Data {
         public async Task SetAction(ulong message, int action) {
             var col = db.GetCollection<DBActionInfo>("actions");
             await col.InsertOneAsync(new DBActionInfo() { Id = message, ActionId = action });
+        }
+        #endregion
+
+        #region impl Topic
+        public async Task<TopicData[]> GetTopics(ulong guild) {
+            var col = db.GetCollection<DBTopicInfo>("topics");
+            var filter = Builders<DBTopicInfo>.Filter;
+            return (await col.Find(filter.Eq("guild", guild)).ToListAsync()).ToArray();
+        }
+        public Task AddTopic(ulong guild, ulong channel, ulong role, string name, string? emote) {
+            var col = db.GetCollection<DBTopicInfo>("topics");
+            return col.InsertOneAsync(new DBTopicInfo { TopicGuild = guild, TopicChannel = channel, TopicRole = role, TopicName = name, TopicEmote = emote });
+        }
+        public async Task RemoveTopic(ulong guild, ulong channel) {
+            var col = db.GetCollection<DBTopicInfo>("topics");
+            var filter = Builders<DBTopicInfo>.Filter;
+            await col.DeleteManyAsync(filter.Eq("_id", channel)); // Data model kind of doesn't care.
+        }
+        public async Task<TopicData?> GetTopicByName(ulong guild, string name) {
+            var col = db.GetCollection<DBTopicInfo>("topics");
+            var filter = Builders<DBTopicInfo>.Filter;
+            return await col.Find(filter.Eq("guild", guild) & filter.Eq("name", name)).FirstOrDefaultAsync(); // Default -> null
+            // Can't just return the Task because C# won't do an implicit cast DBTopicInfo -> TopicData
+        }
+        public async Task<TopicData?> GetTopicByEmote(ulong guild, string emote) {
+            var col = db.GetCollection<DBTopicInfo>("topics");
+            var filter = Builders<DBTopicInfo>.Filter;
+            return await col.Find(filter.Eq("guild", guild) & filter.Eq("emote", emote)).FirstOrDefaultAsync();
+        }
+        public async Task<TopicData?> GetTopicByChannel(ulong guild, ulong channel) {
+            var col = db.GetCollection<DBTopicInfo>("topics");
+            var filter = Builders<DBTopicInfo>.Filter;
+            return await col.Find(filter.Eq("_id", channel)).FirstOrDefaultAsync();
         }
         #endregion
     }
