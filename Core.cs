@@ -43,7 +43,7 @@ namespace SeraphinaNET {
             commandService.CommandExecuted += CommandExecuted;
             commandService.AddModuleAsync<Commands.BasicCommands>(services);
             commandService.AddModuleAsync<Commands.PinCommands>(services);
-            
+            commandService.AddModuleAsync<Commands.TopicsCommands>(services);
         }
         
         public async Task Connect() {
