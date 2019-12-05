@@ -32,8 +32,10 @@ namespace SeraphinaNET.Data {
         public Task<TopicData[]> GetTopics(ulong guild);
         public Task<TopicData?> GetTopicByName(ulong guild, string name);
         public Task<TopicData?> GetTopicByEmote(ulong guild, string emote);
-        public Task AddTopic(ulong guild, ulong role, string name, string? emote);
-        public Task RemoveTopic(ulong guild, ulong role);
+        public Task<TopicData?> GetTopicByChannel(ulong guild, ulong channel);
+        public Task AddTopic(ulong guild, ulong channel, ulong role, string name, string? emote);
+        public Task RemoveTopic(ulong guild, ulong channel); // Roles are automatically unlisted when there's
+        // no more channels left with the role assigned for the topic.
         #endregion
     }
 
@@ -49,6 +51,7 @@ namespace SeraphinaNET.Data {
     public interface TopicData {
         public string TopicName { get; }
         public ulong TopicRole { get; }
+        public ulong TopicChannel { get; }
         public string? TopicEmote { get; }
     }
 }
