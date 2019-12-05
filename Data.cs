@@ -29,6 +29,8 @@ namespace SeraphinaNET.Data {
 
         #region Topics
         // Topics as self-assignable roles just makes way more sense.
+        // This may need a review because currently naming is per channel rather than role
+        // But logically (from a human perspective) there needs to be a name<1..> -> role<1> -> channel<1..> relationship
         public Task<TopicData[]> GetTopics(ulong guild);
         public Task<TopicData?> GetTopicByName(ulong guild, string name);
         public Task<TopicData?> GetTopicByEmote(ulong guild, string emote);
