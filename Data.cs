@@ -26,6 +26,12 @@ namespace SeraphinaNET.Data {
         Task<ActionData?> GetAction(ulong message);
         Task SetAction(ulong message, int action);
         #endregion
+
+        #region Topics
+        public Task<TopicData[]?> GetTopics(ulong guild);
+        public Task AddTopic(ulong channel, string name, string? emote);
+        public Task RemoveTopic(ulong channel);
+        #endregion
     }
 
     public interface ActionData {
@@ -35,5 +41,11 @@ namespace SeraphinaNET.Data {
         public Task SetRadioData(ulong user, string? data);
         public Task AddTally(ulong user, string emote);
         public Task RemoveTally(ulong user, string emote);
+    }
+
+    public interface TopicData {
+        public string TopicName { get; }
+        public ulong TopicChannel { get; }
+        public string? TopicEmote { get; }
     }
 }
