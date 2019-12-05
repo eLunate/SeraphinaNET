@@ -28,7 +28,7 @@ namespace SeraphinaNET.Data {
         #endregion
 
         #region Topics
-        public Task<TopicData[]?> GetTopics(ulong guild);
+        public Task<TopicData[]> GetTopics(ulong guild);
         public Task AddTopic(ulong channel, string name, string? emote);
         public Task RemoveTopic(ulong channel);
         #endregion
