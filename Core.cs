@@ -26,11 +26,16 @@ namespace SeraphinaNET {
             .AddSingleton(data)
             .AddSingleton<CommandService>()
             .AddSingleton<PinService>()
+            .AddSingleton<ActionService>()
             .BuildServiceProvider();
+
+            var actions = services.GetRequiredService<ActionService>();
 
             
             discord.Log += Log;
             discord.MessageReceived += MessageReceived;
+            discord.ReactionAdded += actions.HandleReactionAdd;
+            discord.ReactionRemoved += actions.HandleReactionRemove;
 
             var commandService = services.GetRequiredService<CommandService>();
             commandService.Log += Log;
