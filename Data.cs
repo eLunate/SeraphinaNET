@@ -39,6 +39,15 @@ namespace SeraphinaNET.Data {
         public Task RemoveTopic(ulong guild, ulong channel); // Roles are automatically unlisted when there's
                                                              // no more channels left with the role assigned for the topic.
         #endregion
+
+        #region Moderation
+        public Task AddModerationAction(ulong guild, ulong member, ulong moderator, DateTime since, byte type, DateTime? until = null, string? reason = null);
+        public Task<ModerationActionData[]> GetModerationActions(ulong guild, ulong member);
+        public Task<ModerationActionData[]> GetActiveModerationActions(ulong guild, ulong member);
+        public Task RemoveModerationActionCompletionTimer(ulong guild, ulong member, byte type); // A little unorthodox, but whatever.
+        // May later need the ability to add a filter (moderator, type, since)
+        // And possibly the ability to remove moderation actions. We'll see.
+        #endregion
     }
 
     public interface ActionData {
@@ -56,5 +65,15 @@ namespace SeraphinaNET.Data {
         public ulong TopicChannel { get; }
         public string? TopicEmote { get; }
         public ulong TopicGuild { get; }
+    }
+
+    public interface ModerationActionData {
+        public ulong Moderator { get; }
+        public ulong Member { get; }
+        public ulong Guild { get; }
+        public DateTime Since { get; }
+        public DateTime? Until { get; }
+        public string? Reason { get; }
+        public byte Type { get; } // God forbid should I need more than one byte.
     }
 }
