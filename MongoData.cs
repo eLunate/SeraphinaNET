@@ -5,6 +5,7 @@ using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Attributes;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace SeraphinaNET.Data {
     public class MongoData : DataContextFactory {
@@ -68,7 +69,26 @@ namespace SeraphinaNET.Data {
             [BsonElement("emote")]
             public string? TopicEmote { get; set; }
         }
-        #nullable restore warnings
+
+        [BsonIgnoreExtraElements]
+        [BsonNoId]
+        private class DBModerationActionInfo : ModerationActionData {
+            [BsonElement("moderator")]
+            public ulong Moderator { get; set; }
+            [BsonElement("member")]
+            public ulong Member { get; set; }
+            [BsonElement("guild")]
+            public ulong Guild { get; set; }
+            [BsonElement("since")]
+            public DateTime Since { get; set; }
+            [BsonElement("until")]
+            public DateTime? Until { get; set; }
+            [BsonElement("reason")]
+            public string? Reason { get; set; }
+            [BsonElement("type")]
+            public byte Type { get; set; }
+        }
+#nullable restore warnings
         #endregion
 
         private class DBActionController : ActionData {
@@ -107,6 +127,7 @@ namespace SeraphinaNET.Data {
             BsonClassMap.RegisterClassMap<DBChannelInfo>();
             BsonClassMap.RegisterClassMap<DBActionInfo>();
             BsonClassMap.RegisterClassMap<DBTopicInfo>();
+            BsonClassMap.RegisterClassMap<DBModerationActionInfo>();
         }
 
         #region impl Pin
@@ -185,6 +206,38 @@ namespace SeraphinaNET.Data {
             var col = db.GetCollection<DBTopicInfo>("topics");
             var filter = Builders<DBTopicInfo>.Filter;
             return await col.Find(filter.Eq("_id", channel)).FirstOrDefaultAsync();
+        }
+        #endregion
+
+        #region impl Moderation
+        public Task AddModerationAction(ulong guild, ulong member, ulong moderator, DateTime since, byte type, DateTime? until = null, string? reason = null) {
+            var col = db.GetCollection<DBModerationActionInfo>("moderation_events");
+            return col.InsertOneAsync(new DBModerationActionInfo() {
+                Guild = guild,
+                Member = member,
+                Moderator = moderator,
+                Since = since,
+                Until = until,
+                Reason = reason,
+                Type = type
+            });
+        }
+        public Task<ModerationActionData[]> GetModerationActions(ulong guild, ulong member) {
+            var col = db.GetCollection<DBModerationActionInfo>("moderation_events");
+            var filter = Builders<DBModerationActionInfo>.Filter;
+            return col.Find(filter.Eq("guild", guild) & filter.Eq("member", member)).ToCursorAsync().ContinueWith(x => x.Result.ToEnumerable().Cast<ModerationActionData>().ToArray());
+        }
+        public Task GetActiveModerationActions(ulong guild, ulong member) {
+            var col = db.GetCollection<DBModerationActionInfo>("moderation_events");
+            var filter = Builders<DBModerationActionInfo>.Filter;
+            return col.Find(filter.Eq("guild", guild) & filter.Eq("member", member) & filter.Gt("until", DateTime.UtcNow)).ToCursorAsync().ContinueWith(x => x.Result.ToEnumerable().Cast<ModerationActionData>().ToArray());
+        }
+        public Task RemoveModerationActionCompletionTimer(ulong guild, ulong member, byte type) {
+            var col = db.GetCollection<DBModerationActionInfo>("moderation_events");
+            var filter = Builders<DBModerationActionInfo>.Filter;
+            var update = Builders<DBModerationActionInfo>.Update;
+            return col.UpdateManyAsync(filter.Eq("guild", guild) & filter.Eq("member", member) & filter.Gt("until", DateTime.UtcNow) & filter.Eq("type", type), update.Unset("until")).ContinueWith(_ => { });
+            // I needed a quick way to dump the generic type parameter and I didn't feel like awaiting today.
         }
         #endregion
     }
