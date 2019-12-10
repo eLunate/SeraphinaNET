@@ -227,7 +227,7 @@ namespace SeraphinaNET.Data {
             var filter = Builders<DBModerationActionInfo>.Filter;
             return col.Find(filter.Eq("guild", guild) & filter.Eq("member", member)).ToCursorAsync().ContinueWith(x => x.Result.ToEnumerable().Cast<ModerationActionData>().ToArray());
         }
-        public Task GetActiveModerationActions(ulong guild, ulong member) {
+        public Task<ModerationActionData[]> GetActiveModerationActions(ulong guild, ulong member) {
             var col = db.GetCollection<DBModerationActionInfo>("moderation_events");
             var filter = Builders<DBModerationActionInfo>.Filter;
             return col.Find(filter.Eq("guild", guild) & filter.Eq("member", member) & filter.Gt("until", DateTime.UtcNow)).ToCursorAsync().ContinueWith(x => x.Result.ToEnumerable().Cast<ModerationActionData>().ToArray());
@@ -236,8 +236,7 @@ namespace SeraphinaNET.Data {
             var col = db.GetCollection<DBModerationActionInfo>("moderation_events");
             var filter = Builders<DBModerationActionInfo>.Filter;
             var update = Builders<DBModerationActionInfo>.Update;
-            return col.UpdateManyAsync(filter.Eq("guild", guild) & filter.Eq("member", member) & filter.Gt("until", DateTime.UtcNow) & filter.Eq("type", type), update.Unset("until")).ContinueWith(_ => { });
-            // I needed a quick way to dump the generic type parameter and I didn't feel like awaiting today.
+            return col.UpdateManyAsync(filter.Eq("guild", guild) & filter.Eq("member", member) & filter.Gt("until", DateTime.UtcNow) & filter.Eq("type", type), update.Unset("until"));
         }
         #endregion
     }
