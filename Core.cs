@@ -28,6 +28,7 @@ namespace SeraphinaNET {
             .AddSingleton<PinService>()
             .AddSingleton<ActionService>()
             .AddSingleton<TopicService>()
+            .AddSingleton<ModerationService>()
             .BuildServiceProvider();
 
             var actions = services.GetRequiredService<ActionService>();
