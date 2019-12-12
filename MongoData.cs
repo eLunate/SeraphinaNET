@@ -225,12 +225,18 @@ namespace SeraphinaNET.Data {
         public Task<ModerationActionData[]> GetModerationActions(ulong guild, ulong member) {
             var col = db.GetCollection<DBModerationActionInfo>("moderation_events");
             var filter = Builders<DBModerationActionInfo>.Filter;
+            // This is fucking disgusting by the way.
             return col.Find(filter.Eq("guild", guild) & filter.Eq("member", member)).ToCursorAsync().ContinueWith(x => x.Result.ToEnumerable().Cast<ModerationActionData>().ToArray());
         }
         public Task<ModerationActionData[]> GetActiveModerationActions(ulong guild, ulong member) {
             var col = db.GetCollection<DBModerationActionInfo>("moderation_events");
             var filter = Builders<DBModerationActionInfo>.Filter;
             return col.Find(filter.Eq("guild", guild) & filter.Eq("member", member) & filter.Gt("until", DateTime.UtcNow)).ToCursorAsync().ContinueWith(x => x.Result.ToEnumerable().Cast<ModerationActionData>().ToArray());
+        }
+        public Task<ModerationActionData[]> GetExpiredModerationActions() {
+            var col = db.GetCollection<DBModerationActionInfo>("moderation_events");
+            var filter = Builders<DBModerationActionInfo>.Filter;
+            return col.Find(filter.Lt("until", DateTime.UtcNow)).ToCursorAsync().ContinueWith(x => x.Result.ToEnumerable().Cast<ModerationActionData>().ToArray());
         }
         public Task RemoveModerationActionCompletionTimer(ulong guild, ulong member, byte type) {
             var col = db.GetCollection<DBModerationActionInfo>("moderation_events");
