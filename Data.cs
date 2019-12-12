@@ -44,7 +44,8 @@ namespace SeraphinaNET.Data {
         public Task AddModerationAction(ulong guild, ulong member, ulong moderator, DateTime since, byte type, DateTime? until = null, string? reason = null);
         public Task<ModerationActionData[]> GetModerationActions(ulong guild, ulong member);
         public Task<ModerationActionData[]> GetActiveModerationActions(ulong guild, ulong member);
-        public Task RemoveModerationActionCompletionTimer(ulong guild, ulong member, byte type); // A little unorthodox, but whatever.
+        public Task<ModerationActionData[]> GetExpiredModerationActions();
+        public Task RemoveModerationActionCompletionTimer(ulong guild, ulong member, byte type); // A little unorthodox, but whatever. Should only be one active per combo.
         // May later need the ability to add a filter (moderator, type, since)
         // And possibly the ability to remove moderation actions. We'll see.
         #endregion
