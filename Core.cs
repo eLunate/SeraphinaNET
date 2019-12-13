@@ -15,8 +15,6 @@ namespace SeraphinaNET {
     class SeraphinaCore : IDisposable {
         private readonly DataContextFactory data;
         private readonly DiscordSocketClient discord;
-
-        // This is IDisposable, and it's going to give me a seizure at this rate.
         private readonly ServiceProvider services;
 
         public SeraphinaCore(DiscordSocketClient discord, DataContextFactory data) {
