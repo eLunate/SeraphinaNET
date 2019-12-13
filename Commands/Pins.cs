@@ -2,7 +2,7 @@ using Discord.Commands;
 using Discord;
 using System.Threading.Tasks;
 using System.Linq;
-using SeraphinaNET;
+using SeraphinaNET.Services;
 
 namespace SeraphinaNET.Commands {
     public class PinCommands : ModuleBase<SocketCommandContext> {

@@ -1,5 +1,6 @@
 using Discord.Commands;
 using System.Threading.Tasks;
+using SeraphinaNET.Services;
 
 namespace SeraphinaNET.Commands {
     class BasicCommands : ModuleBase<SocketCommandContext> {

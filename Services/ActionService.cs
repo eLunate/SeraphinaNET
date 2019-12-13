@@ -6,7 +6,7 @@ using Discord;
 using System.Linq;
 using SeraphinaNET.Data;
 
-namespace SeraphinaNET {
+namespace SeraphinaNET.Services {
     public abstract class Action {
         internal Action() { } // Please don't extend this outside of the assembly
                               // Not that Seraphina is designed for that to be possible, but don't anyway.

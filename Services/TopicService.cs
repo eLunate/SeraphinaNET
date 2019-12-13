@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using SeraphinaNET.Data;
 using Discord;
 
-namespace SeraphinaNET {
+namespace SeraphinaNET.Services {
     class TopicService {
         // At this point I'm beginning to ask myself if I should place my services in their own folder
         private readonly DataContextFactory data;

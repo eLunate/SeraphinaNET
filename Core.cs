@@ -4,6 +4,7 @@
 
 using Discord;
 using SeraphinaNET.Data;
+using SeraphinaNET.Services;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Discord.Commands;

@@ -6,7 +6,7 @@ using SeraphinaNET.Data;
 using System.Threading.Tasks;
 using Discord;
 
-namespace SeraphinaNET {
+namespace SeraphinaNET.Services {
     class ModerationService {
         private readonly DataContextFactory data;
 

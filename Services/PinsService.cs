@@ -6,7 +6,7 @@ using Discord;
 
 using SeraphinaNET.Data;
 
-namespace SeraphinaNET {
+namespace SeraphinaNET.Services {
     public readonly struct PinData {
         public readonly IUserMessage message;
         public readonly bool superPin;
