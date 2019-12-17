@@ -28,6 +28,7 @@ namespace SeraphinaNET {
             .AddSingleton<ActionService>()
             .AddSingleton<TopicService>()
             .AddSingleton<ModerationService>()
+            .AddSingleton<ActivityService>()
             .BuildServiceProvider();
 
             var actions = services.GetRequiredService<ActionService>();
@@ -70,6 +71,10 @@ namespace SeraphinaNET {
                 await services.GetRequiredService<CommandService>().ExecuteAsync(ctx, argPos, services);
                 return;
             }
+
+            // If it wasn't caught by the command processor, mark it as activity.
+            // Actually I'll have a better way to do this later, but for now this will do.
+            await services.GetRequiredService<ActivityService>().AddMessageActivity(userMessage);
         }
 
         private static async Task CommandExecuted(Optional<CommandInfo> command, ICommandContext context, IResult result) {
