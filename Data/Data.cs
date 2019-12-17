@@ -8,7 +8,8 @@ namespace SeraphinaNET.Data {
         DataContext GetContext();
     }
 
-    public interface DataContext : IDisposable {
+    public interface DataContext : IDisposable { 
+        // In the future perhaps extract these into their own interfaces and produce an aggregate interface for ease of signatures.
         #region Pins
         Task<ulong[]> GetPins(ulong channel);
         Task SetPins(ulong channel, ulong[] messages);
@@ -46,8 +47,15 @@ namespace SeraphinaNET.Data {
         public Task<ModerationActionData[]> GetActiveModerationActions(ulong guild, ulong member);
         public Task<ModerationActionData[]> GetExpiredModerationActions();
         public Task RemoveModerationActionCompletionTimer(ulong guild, ulong member, byte type); // A little unorthodox, but whatever. Should only be one active per combo.
-        // May later need the ability to add a filter (moderator, type, since)
-        // And possibly the ability to remove moderation actions. We'll see.
+                                                                                                 // May later need the ability to add a filter (moderator, type, since)
+                                                                                                 // And possibly the ability to remove moderation actions. We'll see.
+        #endregion
+
+        #region Activity
+        public Task AddActivity(ulong guild, ulong channel, ulong member, uint textScore, uint altScore, DateTime at);
+        // public Task AddActivity(ulong guild, ulong channel, ulong member, uint textScore, uint altScore) => AddActivity(guild, channel, member, textScore, altScore, DateTime.UtcNow);
+        public Task<ActivityData> GetMemberActivityScore(ulong guild, ulong member, DateTime since);
+        public Task<ActivityData> GetChannelActivityScore(ulong guild, ulong channel, DateTime since);
         #endregion
     }
 
@@ -76,5 +84,12 @@ namespace SeraphinaNET.Data {
         public DateTime? Until { get; }
         public string? Reason { get; }
         public byte Type { get; } // God forbid should I need more than one byte.
+    }
+
+    public interface ActivityData {
+        public uint TextScore { get; }
+        public uint AltScore { get; }
+        // Really need a better content score breakdown
+        // But that really depends on a concrete scoring impl
     }
 }
