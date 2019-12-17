@@ -88,6 +88,23 @@ namespace SeraphinaNET.Data {
             [BsonElement("type")]
             public byte Type { get; set; }
         }
+
+        [BsonIgnoreExtraElements]
+        [BsonNoId]
+        private class DBActivityInfo : ActivityData {
+            [BsonElement("text_score")]
+            public uint TextScore { get; set; }
+            [BsonElement("alt_score")]
+            public uint AltScore { get; set; }
+            [BsonElement("guild")]
+            public ulong Guild { get; set; }
+            [BsonElement("channel")]
+            public ulong Channel { get; set; }
+            [BsonElement("member")]
+            public ulong Member { get; set; }
+            [BsonElement("at")]
+            public DateTime At { get; set; }
+        }
 #nullable restore warnings
         #endregion
 
@@ -243,6 +260,38 @@ namespace SeraphinaNET.Data {
             var filter = Builders<DBModerationActionInfo>.Filter;
             var update = Builders<DBModerationActionInfo>.Update;
             return col.UpdateManyAsync(filter.Eq("guild", guild) & filter.Eq("member", member) & filter.Gt("until", DateTime.UtcNow) & filter.Eq("type", type), update.Unset("until"));
+        }
+        #endregion
+
+        #region impl Activity
+        public Task AddActivity(ulong guild, ulong channel, ulong member, uint textScore, uint altScore, DateTime at) {
+            var col = db.GetCollection<DBActivityInfo>("activity");
+            return col.InsertOneAsync(new DBActivityInfo() { 
+                Guild = guild,
+                Channel = channel,
+                Member = member,
+                TextScore = textScore,
+                AltScore = altScore,
+                At = at
+            });
+        }
+        public Task<ActivityData> GetMemberActivityScore(ulong guild, ulong member, DateTime since) {
+            var col = db.GetCollection<DBActivityInfo>("activity");
+            var filter = Builders<DBActivityInfo>.Filter;
+            return col.Aggregate()
+                .Match(filter.Eq("guild", guild) & filter.Eq("member", member) & filter.Gt("at", since))
+                .Group(x => x.Member, x => (ActivityData)new DBActivityInfo { AltScore = (uint)x.Sum(x => x.AltScore), TextScore = (uint)x.Sum(x => x.TextScore) })
+                // Enough casting to scare a sorcerer.
+                .FirstOrDefaultAsync();
+        }
+        public Task<ActivityData> GetChannelActivityScore(ulong guild, ulong channel, DateTime since) {
+            var col = db.GetCollection<DBActivityInfo>("activity");
+            var filter = Builders<DBActivityInfo>.Filter;
+            return col.Aggregate()
+                .Match(filter.Eq("guild", guild) & filter.Eq("channel", channel) & filter.Gt("at", since))
+                .Group(x => x.Member, x => (ActivityData)new DBActivityInfo { AltScore = (uint)x.Sum(x => x.AltScore), TextScore = (uint)x.Sum(x => x.TextScore) })
+                // But the casting is kind of necessary.
+                .FirstOrDefaultAsync();
         }
         #endregion
     }
