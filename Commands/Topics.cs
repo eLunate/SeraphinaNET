@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Discord.Commands;
 using Discord;
 using System.Linq;
+using SeraphinaNET.Services;
 
 namespace SeraphinaNET.Commands {
     class TopicsCommands : ModuleBase<SocketCommandContext> {
