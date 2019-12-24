@@ -57,6 +57,11 @@ namespace SeraphinaNET.Data {
         public Task<ActivityData> GetMemberActivityScore(ulong guild, ulong member, DateTime since);
         public Task<ActivityData> GetChannelActivityScore(ulong guild, ulong channel, DateTime since);
         #endregion
+
+        #region User
+        public Task<double> GetMemberXP(ulong guild, ulong member);
+        public Task GiveMemberXP(ulong guild, ulong member, double xp); // Also negative XP.
+        #endregion
     }
 
     public interface ActionData {
