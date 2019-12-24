@@ -13,7 +13,7 @@ using System;
 
 namespace SeraphinaNET {
     class SeraphinaCore : IDisposable {
-        private readonly DataContextFactory data;
+        private readonly DataContextFactory data; // Never used, but I like being explicit about the lifetime (despite services)
         private readonly DiscordSocketClient discord;
         private readonly ServiceProvider services;
 
@@ -33,7 +33,6 @@ namespace SeraphinaNET {
             .BuildServiceProvider();
 
             var actions = services.GetRequiredService<ActionService>();
-
             
             discord.Log += Log;
             discord.MessageReceived += MessageReceived;
