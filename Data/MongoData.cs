@@ -105,6 +105,14 @@ namespace SeraphinaNET.Data {
             [BsonElement("at")]
             public DateTime At { get; set; }
         }
+
+        [BsonIgnoreExtraElements]
+        private class DBUserInfo {
+            [BsonId]
+            public ulong Id { get; set; }
+            [BsonElement("guild_xp")]
+            public Dictionary<ulong, double> GuildXP { get; set; }
+        }
 #nullable restore warnings
         #endregion
 
@@ -292,6 +300,29 @@ namespace SeraphinaNET.Data {
                 .Group(x => x.Member, x => (ActivityData)new DBActivityInfo { AltScore = (uint)x.Sum(x => x.AltScore), TextScore = (uint)x.Sum(x => x.TextScore) })
                 // But the casting is kind of necessary.
                 .FirstOrDefaultAsync();
+        }
+        #endregion
+
+        #region impl User
+        public async Task<double> GetMemberXP(ulong guild, ulong member) {
+            var col = db.GetCollection<DBUserInfo>("users");
+            var filter = Builders<DBUserInfo>.Filter;
+            var projection = Builders<DBUserInfo>.Projection;
+            var doc = await col.Find(filter.Eq("_id", member)).Project(projection.Include("GuildXP")).FirstOrDefaultAsync();
+            try {
+                return doc.GetValue("GuildXP")?.AsBsonDocument?.GetValue(guild.ToString()).AsNullableDouble ?? default;
+            #pragma warning disable CA1031 // Most specific exception I can see from this sequence.
+            } catch (InvalidCastException) {
+                return default;
+            }
+            #pragma warning restore CA1031
+        }
+
+        public Task GiveMemberXP(ulong guild, ulong member, double xp) {
+            var col = db.GetCollection<DBUserInfo>("users");
+            var filter = Builders<DBUserInfo>.Filter;
+            var update = Builders<DBUserInfo>.Update;
+            return col.UpdateOneAsync(filter.Eq("_id", member), update.Inc($"GuildXP.{guild.ToString()}", xp), new UpdateOptions { IsUpsert = true });
         }
         #endregion
     }
