@@ -76,7 +76,10 @@ namespace SeraphinaNET {
 
             // If it wasn't caught by the command processor, mark it as activity.
             // Actually I'll have a better way to do this later, but for now this will do.
-            await services.GetRequiredService<ActivityService>().AddMessageActivity(userMessage);
+            if (!(message.Channel is IGuildChannel channel)) return;
+            var score = services.GetRequiredService<ContentService>().ScoreMessage(userMessage);
+            var givenXP = await services.GetRequiredService<UserService>().GiveMemberXPScaled(channel.GuildId, message.Author.Id, score.TextScore);
+            await services.GetRequiredService<ActivityService>().AddMessageActivity(userMessage, score.TextScore + score.AltScore, (uint)givenXP);
         }
 
         private static async Task CommandExecuted(Optional<CommandInfo> command, ICommandContext context, IResult result) {

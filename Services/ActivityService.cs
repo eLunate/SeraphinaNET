@@ -8,23 +8,16 @@ using Discord;
 namespace SeraphinaNET.Services {
     class ActivityService {
         private readonly DataContextFactory data;
-        private readonly ContentService content;
-        private readonly UserService user;
 
-        public ActivityService(DataContextFactory data, ContentService content, UserService user) {
+        public ActivityService(DataContextFactory data) {
             this.data = data;
-            this.user = user;
-            this.content = content;
         }
 
-        public async Task AddMessageActivity(IUserMessage message) {
+        public async Task AddMessageActivity(IUserMessage message, uint activityScore, uint altScore) {
             if (!(message.Channel is IGuildChannel channel)) return;
-            if (!(message is IUserMessage userMessage)) return;
-            var score = content.ScoreMessage(userMessage);
-            var givenXP = await user.GiveMemberXPScaled(channel.GuildId, message.Author.Id, score.TextScore);
             using var db = data.GetContext();
             // I'll return to this later or something.
-            await db.AddActivity(channel.GuildId, channel.Id, message.Author.Id, score.TextScore + score.AltScore, (uint)givenXP, DateTime.UtcNow);
+            await db.AddActivity(channel.GuildId, channel.Id, message.Author.Id, activityScore, altScore, DateTime.UtcNow);
         }
 
         // Why unpack things into a struct?
