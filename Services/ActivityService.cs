@@ -9,17 +9,22 @@ namespace SeraphinaNET.Services {
     class ActivityService {
         private readonly DataContextFactory data;
         private readonly ContentService content;
+        private readonly UserService user;
 
-        public ActivityService(DataContextFactory data) {
+        public ActivityService(DataContextFactory data, ContentService content, UserService user) {
             this.data = data;
+            this.user = user;
+            this.content = content;
         }
 
-        public Task AddMessageActivity(IUserMessage message) {
-            if (!(message.Channel is IGuildChannel channel)) return Task.CompletedTask;
-            var score = content.ScoreMessage(message);
+        public async Task AddMessageActivity(IUserMessage message) {
+            if (!(message.Channel is IGuildChannel channel)) return;
+            if (!(message is IUserMessage userMessage)) return;
+            var score = content.ScoreMessage(userMessage);
+            var givenXP = await user.GiveMemberXPScaled(channel.GuildId, message.Author.Id, score.TextScore);
             using var db = data.GetContext();
             // I'll return to this later or something.
-            return db.AddActivity(channel.GuildId, channel.Id, message.Author.Id, score.TextScore, score.AltScore, DateTime.UtcNow);
+            await db.AddActivity(channel.GuildId, channel.Id, message.Author.Id, score.TextScore + score.AltScore, (uint)givenXP, DateTime.UtcNow);
         }
 
         // Why unpack things into a struct?
