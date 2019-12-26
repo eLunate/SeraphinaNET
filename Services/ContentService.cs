@@ -21,11 +21,9 @@ namespace SeraphinaNET.Services {
         }
 
         private readonly DataContextFactory data;
-        private readonly ActivityService activity;
 
-        public ContentService(DataContextFactory data, ActivityService activity) {
+        public ContentService(DataContextFactory data) {
             this.data = data;
-            this.activity = activity;
         }
 
         private static readonly Regex urlRegex = new Regex(@"(?>https?://\S+)");
