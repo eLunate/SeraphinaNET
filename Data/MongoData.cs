@@ -308,7 +308,7 @@ namespace SeraphinaNET.Data {
             var col = db.GetCollection<DBUserInfo>("users");
             var filter = Builders<DBUserInfo>.Filter;
             var projection = Builders<DBUserInfo>.Projection;
-            var doc = await col.Find(filter.Eq("_id", member)).Project(projection.Include("GuildXP")).FirstOrDefaultAsync();
+            var doc = await col.Find(filter.Eq("_id", member)).Project(projection.Include("guild_xp")).FirstOrDefaultAsync();
             try {
                 return doc.GetValue("GuildXP")?.AsBsonDocument?.GetValue(guild.ToString()).AsNullableDouble ?? default;
             #pragma warning disable CA1031 // Most specific exception I can see from this sequence.
@@ -322,7 +322,7 @@ namespace SeraphinaNET.Data {
             var col = db.GetCollection<DBUserInfo>("users");
             var filter = Builders<DBUserInfo>.Filter;
             var update = Builders<DBUserInfo>.Update;
-            return col.UpdateOneAsync(filter.Eq("_id", member), update.Inc($"GuildXP.{guild.ToString()}", xp), new UpdateOptions { IsUpsert = true });
+            return col.UpdateOneAsync(filter.Eq("_id", member), update.Inc($"guild_xp.{guild.ToString()}", xp), new UpdateOptions { IsUpsert = true });
         }
         #endregion
     }
