@@ -310,7 +310,7 @@ namespace SeraphinaNET.Data {
             var projection = Builders<DBUserInfo>.Projection;
             var doc = await col.Find(filter.Eq("_id", member)).Project(projection.Include("guild_xp")).FirstOrDefaultAsync();
             try {
-                return doc.GetValue("GuildXP")?.AsBsonDocument?.GetValue(guild.ToString()).AsNullableDouble ?? default;
+                return doc.GetValue("guild_xp")?.AsBsonDocument?.GetValue(guild.ToString()).AsNullableDouble ?? default;
             #pragma warning disable CA1031 // Most specific exception I can see from this sequence.
             } catch (InvalidCastException) {
                 return default;
