@@ -153,6 +153,8 @@ namespace SeraphinaNET.Data {
             BsonClassMap.RegisterClassMap<DBActionInfo>();
             BsonClassMap.RegisterClassMap<DBTopicInfo>();
             BsonClassMap.RegisterClassMap<DBModerationActionInfo>();
+            BsonClassMap.RegisterClassMap<DBActivityInfo>();
+            BsonClassMap.RegisterClassMap<DBUserInfo>();
         }
 
         #region impl Pin
