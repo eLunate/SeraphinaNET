@@ -37,6 +37,12 @@ namespace SeraphinaNET.Services {
         }
         public Task GiveMemberXPScaled(IGuildUser member, double amount) => GiveMemberXPScaled(member.GuildId, member.Id, amount);
 
+        public Task<double> GetMemberXP(ulong guild, ulong member) {
+            using var db = data.GetContext();
+            return db.GetMemberXP(guild, member);
+        }
+        public Task<double> GetMemberXP(IGuildUser member) => GetMemberXP(member.GuildId, member.Id);
+
         // XP per level starts at XP_ELASTIC_THRESHOLD * LEVEL_TIME_RATIO
         // It doubles every LEVEL_ELASTIC_TARGET levels accoring to (3^k)f(x) = 3f(kx), where k is LEVEL_ELASTIC_TARGET (and x is the level)
         public static double LevelToXP(double level) 
