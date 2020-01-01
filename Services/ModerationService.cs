@@ -9,9 +9,16 @@ using Discord;
 namespace SeraphinaNET.Services {
     class ModerationService {
         private readonly DataContextFactory data;
+        private readonly UserService userService;
+        private readonly ActivityService activityService;
 
-        public ModerationService(DataContextFactory data) {
+        private const double PURGE_THRESHOLD_TIME_GAIN_RATE = 1 / 8;
+        private const double PURGE_THRESHOLD_GAIN_RATE = 1 / 12;
+
+        public ModerationService(DataContextFactory data, UserService userService, ActivityService activityService) {
             this.data = data;
+            this.userService = userService;
+            this.activityService = activityService;
         }
 
         private enum ModerationType:byte {
@@ -138,9 +145,29 @@ namespace SeraphinaNET.Services {
             // Actually I have no idea how ForEachAsync works when you use something async in it.
             // Do the tasks get captured and wrapped up? I don't know.
         }
-        // public Task Purge(IGuild guild) { }
-        // There's no activity indicators yet, so purging can't happen
-        // Also consider: Prune/purge have archaic reasons for their names, and don't match Discord's language.
-        // Maybe switch the two of them.
+        public async Task Purge(IGuild guild) {
+            // First, get Discord to try and purge the users who haven't been seen for a while in Discord.
+            await guild.PruneUsersAsync(); // Not online for 30 days, no role = clear
+            var users = await guild.GetUsersAsync();
+            foreach (var user in users) {
+                if (user.IsBot) continue;
+                // May want to extend UserService (and Data) or something else to get these stats in bulk,
+                // Because this job will take a long time on large servers.
+                var level = UserService.XPToLevel(await userService.GetMemberXP(user));
+                // With each level, the activity requirement goes up but the threshold time also increases
+                // In total the user needs less activity per day and has more time to do it in.
+                // The user gets a free pass if they've been in the server for less than two threshold periods.
+                var thresholdTime = TimeSpan.FromDays(5 + level * PURGE_THRESHOLD_TIME_GAIN_RATE);
+                if (user.JoinedAt >= DateTime.UtcNow - thresholdTime*2) continue;
+                var activity = await activityService.GetMemberActivity(user.GuildId, user.Id, DateTime.UtcNow - thresholdTime);
+                // Potentially define the activity threshold in terms of scoring hours.
+                // Not that activity tracking itself has any elastic scoring, but it's all based on the same targets.
+                // Rename activity.TextScore as activity.ContentScore? It would make more sense.
+                if (activity.TextScore < 200 * (5 + level * PURGE_THRESHOLD_GAIN_RATE)) {
+                    // Ideally I wouldn't await here and I would just do all of the kicks completely async on cooldown in the background. 
+                    await user.KickAsync();
+                }
+            }
+        }
     }
 }
