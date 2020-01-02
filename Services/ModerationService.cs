@@ -14,6 +14,8 @@ namespace SeraphinaNET.Services {
 
         private const double PURGE_THRESHOLD_TIME_GAIN_RATE = 1 / 8;
         private const double PURGE_THRESHOLD_GAIN_RATE = 1 / 12;
+        private const double MUTE_BASE_ACTIVITY_PER_SECOND = 20;
+        private const double MUTE_LEVEL_BIAS = 1 / 12;
 
         public ModerationService(DataContextFactory data, UserService userService, ActivityService activityService) {
             this.data = data;
@@ -168,6 +170,26 @@ namespace SeraphinaNET.Services {
                     await user.KickAsync();
                 }
             }
+        }
+
+        public async Task<bool> MemberIsMuted(ulong guild, ulong member) {
+            // Later this should check if they're mute-immune via perms.
+            // Check if they're manually muted.
+            using var db = data.GetContext();
+            var actions = await db.GetActiveModerationActions(guild, member);
+            return actions.Any(x => x.Type == (byte)ModerationType.Mute);
+        }
+        public Task<bool> MemberIsMuted(IGuildUser user) => MemberIsMuted(user.GuildId, user.Id);
+
+        public async Task<bool> ActionIsMuted(ulong guild, ulong member, uint score) {
+            if (await MemberIsMuted(guild, member)) return false;
+            var userLevel = UserService.XPToLevel(await userService.GetMemberXP(guild, member));
+            var userActivity = await activityService.GetMemberActivity(guild, member, DateTime.UtcNow - TimeSpan.FromSeconds(score / (MUTE_BASE_ACTIVITY_PER_SECOND * (1 + userLevel * MUTE_LEVEL_BIAS))));
+            return userActivity.TextScore > score * 1.2; // This bias works differently to changing the activity capture threshold
+        }
+        public Task<bool> ActionIsMuted(IUserMessage message, uint score) {
+            if (message.Source != MessageSource.User || !(message.Channel is IGuildChannel channel)) return Task.FromResult(false);
+            return ActionIsMuted(channel.GuildId, message.Author.Id, score);
         }
     }
 }

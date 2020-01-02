@@ -78,6 +78,13 @@ namespace SeraphinaNET {
             // Actually I'll have a better way to do this later, but for now this will do.
             if (!(message.Channel is IGuildChannel channel)) return;
             var score = services.GetRequiredService<ContentService>().ScoreMessage(userMessage);
+            if (await services.GetRequiredService<ModerationService>().ActionIsMuted(userMessage, score.TextScore + score.AltScore)) {
+                await Task.WhenAll(
+                    message.DeleteAsync(),
+                    (await message.Author.GetOrCreateDMChannelAsync()).SendMessageAsync("You're typing too much, too fast. Calm down a little.")
+                );
+                return;
+            }
             var givenXP = await services.GetRequiredService<UserService>().GiveMemberXPScaled(channel.GuildId, message.Author.Id, score.TextScore);
             await services.GetRequiredService<ActivityService>().AddMessageActivity(userMessage, score.TextScore + score.AltScore, (uint)givenXP);
         }
