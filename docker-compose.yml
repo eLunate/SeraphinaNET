@@ -10,3 +10,5 @@ services:
       - database
   database:
     image: ${DOCKER_REGISTRY-}mongo
+    ports: 
+    - 27017

@@ -14,7 +14,7 @@ namespace SeraphinaNET.Services {
 
         private const double PURGE_THRESHOLD_TIME_GAIN_RATE = 1 / 8;
         private const double PURGE_THRESHOLD_GAIN_RATE = 1 / 12;
-        private const double MUTE_BASE_ACTIVITY_PER_SECOND = 20;
+        private const double MUTE_BASE_ACTIVITY_PER_SECOND = 8;
         private const double MUTE_LEVEL_BIAS = 1 / 12;
 
         public ModerationService(DataContextFactory data, UserService userService, ActivityService activityService) {
@@ -185,6 +185,9 @@ namespace SeraphinaNET.Services {
             if (await MemberIsMuted(guild, member)) return false;
             var userLevel = UserService.XPToLevel(await userService.GetMemberXP(guild, member));
             var userActivity = await activityService.GetMemberActivity(guild, member, DateTime.UtcNow - TimeSpan.FromSeconds(score / (MUTE_BASE_ACTIVITY_PER_SECOND * (1 + userLevel * MUTE_LEVEL_BIAS))));
+            Console.WriteLine(DateTime.UtcNow - TimeSpan.FromSeconds(score / (MUTE_BASE_ACTIVITY_PER_SECOND * (1 + userLevel * MUTE_LEVEL_BIAS))));
+            Console.WriteLine(score);
+            Console.WriteLine(userActivity.TextScore);
             return userActivity.TextScore > score * 1.2; // This bias works differently to changing the activity capture threshold
         }
         public Task<bool> ActionIsMuted(IUserMessage message, uint score) {

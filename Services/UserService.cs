@@ -15,9 +15,6 @@ namespace SeraphinaNET.Services {
         private const uint LEVEL_ELASTIC_TARGET = 8; // Where the levels begin to get harder with elastic scaling
         private const double LEVEL_TIME_TARGET = 2; // Amount of hours (of the xp threshold) per level.
 
-        private const double LEVEL_TIME_RATIO = LEVEL_TIME_TARGET / XP_ELASTIC_TIME;
-        private const double LN2 = 0.693147180559945286227d; // Math.Log(2) is not a constant expression. ln(2) from FDLIBM.
-
         public UserService(DataContextFactory data, ActivityService activity) {
             this.data = data;
             this.activity = activity;
@@ -43,15 +40,11 @@ namespace SeraphinaNET.Services {
         }
         public Task<double> GetMemberXP(IGuildUser member) => GetMemberXP(member.GuildId, member.Id);
 
-        // XP per level starts at XP_ELASTIC_THRESHOLD * LEVEL_TIME_RATIO
-        // It doubles every LEVEL_ELASTIC_TARGET levels accoring to (3^k)f(x) = 3f(kx), where k is LEVEL_ELASTIC_TARGET (and x is the level)
-        public static double LevelToXP(double level) 
-            // ScaleB could be useful here if I can get another fractional part or settle for truncation.
-            => 1/LN2 * XP_ELASTIC_THRESHOLD * LEVEL_TIME_RATIO * LEVEL_ELASTIC_TARGET * Math.Pow(2, level / LEVEL_ELASTIC_TARGET);
+        // The JIT should be able to inline and fold a lot of the constants in here.
+        // logb(a) = x where b^x = a
+        public static double LevelToXP(double level) => (Math.Pow(2, level / LEVEL_ELASTIC_TARGET)-1) * XP_ELASTIC_THRESHOLD * LEVEL_TIME_TARGET * LEVEL_ELASTIC_TARGET;
 
-        public static double XPToLevel(double xp)
-            // I'm hoping that constant folding means I don't have to worry about most of these expressions.
-            => 1/LN2 * LEVEL_ELASTIC_TARGET * Math.Log((LN2 * XP_ELASTIC_THRESHOLD * LEVEL_TIME_RATIO) / (LEVEL_ELASTIC_TARGET * xp));
+        public static double XPToLevel(double xp) => Math.Log2(1+xp/(XP_ELASTIC_THRESHOLD * LEVEL_TIME_TARGET * LEVEL_ELASTIC_TARGET))*LEVEL_ELASTIC_TARGET;
 
         public static XPStats XPToNextLevel(double xp) {
             var currentLevel = XPToLevel(xp);

@@ -288,8 +288,9 @@ namespace SeraphinaNET.Data {
         public async Task<ActivityData> GetMemberActivityScore(ulong guild, ulong member, DateTime since) {
             var col = db.GetCollection<DBActivityInfo>("activity");
             var filter = Builders<DBActivityInfo>.Filter;
+            var projection = Builders<DBActivityInfo>.Projection;
             return await col.Aggregate()
-                .Match(filter.Eq("guild", guild) & filter.Eq("member", member) & filter.Gt("at", since))
+                .Match(x => x.Member == member && x.Guild == guild && x.At > since)
                 .Group(x => x.Member, x => new DBActivityInfo { AltScore = (uint)x.Sum(x => x.AltScore), TextScore = (uint)x.Sum(x => x.TextScore) })
                 .FirstOrDefaultAsync() ?? new DBActivityInfo();
         }

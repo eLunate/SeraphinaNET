@@ -13,5 +13,9 @@ namespace SeraphinaNET.Commands {
         [Command("xp")]
         [RequireContext(ContextType.Guild)]
         public async Task GetXP() => await ReplyAsync((await user.GetMemberXP(Context.Guild.Id, Context.User.Id)).ToString());
+
+        [Command("level")]
+        [RequireContext(ContextType.Guild)]
+        public async Task GetLevel() => await ReplyAsync(UserService.XPToLevel(await user.GetMemberXP(Context.Guild.Id, Context.User.Id)).ToString());
     }
 }
