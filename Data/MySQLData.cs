@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Design;
 using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
 using System.Linq;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -15,6 +16,15 @@ namespace SeraphinaNET.Data {
             this.options = new DbContextOptionsBuilder()
                 .UseMySql(connectionString)
                 .Options;
+        }
+    }
+
+    sealed internal class DesignFactory : IDesignTimeDbContextFactory<MySQLContext> {
+        MySQLContext IDesignTimeDbContextFactory<MySQLContext>.CreateDbContext(string[] _) {
+            var options = new DbContextOptionsBuilder()
+                .UseMySql(Environment.GetEnvironmentVariable("DB_STRING"))
+                .Options;
+            return new MySQLContext(options);
         }
     }
 
