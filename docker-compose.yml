@@ -9,6 +9,6 @@ services:
     links:
       - database
   database:
-    image: ${DOCKER_REGISTRY-}mongo
-    ports: 
-    - 27017
+    image: ${DOCKER_REGISTRY-}mariadb:bionic
+    environment:
+        MYSQL_ROOT_PASSWORD: eeeeeeeeee
