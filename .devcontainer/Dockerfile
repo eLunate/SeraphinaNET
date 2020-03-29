@@ -32,8 +32,8 @@ RUN apt-get update \
     && chmod 0440 /etc/sudoers.d/$USERNAME \
     #
     # Add EF tools
-    && dotnet tool install --global dotnet-ef \
-    && echo $'export PATH=$PATH:$HOME/.dotnet/tools' >> ~/.bash_profile \
+    #&& dotnet tool install --global dotnet-ef \
+    #&& echo $'export PATH=$PATH:$HOME/.dotnet/tools' >> ~/.bash_profile \
     #
     # Clean up
     && apt-get autoremove -y \
