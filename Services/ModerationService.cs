@@ -180,7 +180,7 @@ namespace SeraphinaNET.Services {
         public Task<bool> MemberIsMuted(IGuildUser user) => MemberIsMuted(user.GuildId, user.Id);
 
         public async Task<bool> ActionIsMuted(ulong guild, ulong member, uint score) {
-            if (await MemberIsMuted(guild, member)) return false;
+            if (await MemberIsMuted(guild, member)) return true;
             var userLevel = UserService.XPToLevel(await userService.GetMemberXP(guild, member));
             var userActivity = await activityService.GetMemberActivity(guild, member, DateTime.UtcNow - TimeSpan.FromSeconds(score / (MUTE_BASE_ACTIVITY_PER_SECOND * (1 + userLevel * MUTE_LEVEL_BIAS))));
             Console.WriteLine(DateTime.UtcNow - TimeSpan.FromSeconds(score / (MUTE_BASE_ACTIVITY_PER_SECOND * (1 + userLevel * MUTE_LEVEL_BIAS))));
