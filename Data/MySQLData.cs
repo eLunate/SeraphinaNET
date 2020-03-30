@@ -262,7 +262,7 @@ namespace SeraphinaNET.Data {
             return Topics.Where(x => x.Guild == guild).Cast<TopicData>().ToArrayAsync();
         }
         Task DataContext.GiveMemberXP(ulong guild, ulong member, double xp) {
-            return Database.ExecuteSqlInterpolatedAsync($"UPDATE MemberXP SET xp = xp + {xp} WHERE guild = {guild} AND member = {member}");
+            return Database.ExecuteSqlInterpolatedAsync($"INSERT INTO MemberXP(guild, member, xp) VALUES ({guild}, {member}, {xp}) ON DUPLICATE KEY UPDATE xp = xp + {xp}");
         }
         Task<bool> DataContext.IsPinned(ulong channel, ulong message) {
             return Pins.Where(x => x.Channel == channel && x.Message == message).AnyAsync();
