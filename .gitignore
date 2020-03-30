@@ -4,6 +4,7 @@
 .vs/
 docker-compose.override.yml
 Properties/
-*.csproj.user
+*.*proj.user
 *.sln
 *.dcproj
+/Migrations/
