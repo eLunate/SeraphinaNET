@@ -42,9 +42,9 @@ namespace SeraphinaNET.Services {
               System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
         }
 
-        public Task Kick(IGuildUser member, ulong moderator, string? reason) {
+        public async Task Kick(IGuildUser member, ulong moderator, string? reason) {
             using var db = data.GetContext();
-            return Task.WhenAll(
+            await Task.WhenAll(
                 db.AddModerationAction(
                     guild: member.GuildId,
                     member: member.Id,
@@ -56,12 +56,10 @@ namespace SeraphinaNET.Services {
                 member.KickAsync()
             );
         }
-        public Task Ban(IGuildUser member, ulong moderator, string? reason, DateTime? until) {
-            return Ban(member.Guild, member.Id, moderator, reason, until);
-        }
-        public Task Ban(IGuild guild, ulong member, ulong moderator, string? reason, DateTime? until) { // Timespans can be represented and calculated outside
+        public Task Ban(IGuildUser member, ulong moderator, string? reason, DateTime? until) => Ban(member.Guild, member.Id, moderator, reason, until);
+        public async Task Ban(IGuild guild, ulong member, ulong moderator, string? reason, DateTime? until) { // Timespans can be represented and calculated outside
             using var db = data.GetContext();
-            return Task.WhenAll(
+            await Task.WhenAll(
                 db.AddModerationAction(
                     guild: guild.Id,
                     member: member,
@@ -74,18 +72,18 @@ namespace SeraphinaNET.Services {
                 guild.AddBanAsync(member)
             );
         }
-        public Task Pardon(IGuild guild, ulong member) {
+        public async Task Pardon(IGuild guild, ulong member) {
             using var db = data.GetContext();
-            return Task.WhenAll(
+            await Task.WhenAll(
                 db.RemoveModerationActionCompletionTimer(guild.Id, member, (byte)ModerationType.Ban),
                 guild.RemoveBanAsync(member)
             );
         }
-        public Task Mute(IGuildUser member, ulong moderator, string? reason, DateTime? until) {
+        public async Task Mute(IGuildUser member, ulong moderator, string? reason, DateTime? until) {
             var mute = member.Guild.Roles.Where(x => x.Name.StartsWith("mute", StringComparison.OrdinalIgnoreCase)).FirstOrDefault(); // Mute, muted
             if (mute == null) throw new MissingRoleException("No mute role exists.");
             using var db = data.GetContext();
-            return Task.WhenAll(
+            await Task.WhenAll(
                 db.AddModerationAction(
                     guild: member.GuildId,
                     member: member.Id,
@@ -98,11 +96,11 @@ namespace SeraphinaNET.Services {
                 member.AddRoleAsync(mute)
             );
         }
-        public Task Unmute(IGuildUser member) {
+        public async Task Unmute(IGuildUser member) {
             var mute = member.Guild.Roles.Where(x => x.Name.StartsWith("mute", StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
             if (mute == null) throw new MissingRoleException("No mute role exists.");
             using var db = data.GetContext();
-            return Task.WhenAll(
+            await Task.WhenAll(
                 db.RemoveModerationActionCompletionTimer(member.GuildId, member.Id, (byte)ModerationType.Mute),
                 member.RemoveRoleAsync(mute)
             );

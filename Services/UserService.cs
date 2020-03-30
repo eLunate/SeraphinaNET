@@ -20,9 +20,9 @@ namespace SeraphinaNET.Services {
             this.activity = activity;
         }
 
-        public Task GiveMemberXPRaw(ulong guild, ulong member, double amount) {
+        public async Task GiveMemberXPRaw(ulong guild, ulong member, double amount) {
             using var db = data.GetContext();
-            return db.GiveMemberXP(guild, member, amount);
+            await db.GiveMemberXP(guild, member, amount);
         }
         public Task GiveMemberXPRaw(IGuildUser member, double amount) => GiveMemberXPRaw(member.GuildId, member.Id, amount);
 
@@ -34,9 +34,9 @@ namespace SeraphinaNET.Services {
         }
         public Task GiveMemberXPScaled(IGuildUser member, double amount) => GiveMemberXPScaled(member.GuildId, member.Id, amount);
 
-        public Task<double> GetMemberXP(ulong guild, ulong member) {
+        public async Task<double> GetMemberXP(ulong guild, ulong member) {
             using var db = data.GetContext();
-            return db.GetMemberXP(guild, member);
+            return await db.GetMemberXP(guild, member);
         }
         public Task<double> GetMemberXP(IGuildUser member) => GetMemberXP(member.GuildId, member.Id);
 
