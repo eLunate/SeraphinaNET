@@ -21,11 +21,14 @@ namespace SeraphinaNET.Services {
     public sealed class ActionService {
         private readonly DataContextFactory data;
 
+        public ActionService(DataContextFactory data) { this.data = data; }
+
         private static IEmote GetEmote(string emoteStr) {
             if (Emote.TryParse(emoteStr, out var emote)) return emote;
             else return new Emoji(emoteStr);
         }
 
+        #region base
         private abstract class RadioAction : Action {
             public async sealed override Task ActionOn(ActionData action, SocketReaction reaction) {
                 if (!await ToggleOn(reaction)) {
@@ -116,7 +119,9 @@ namespace SeraphinaNET.Services {
 
             protected abstract Task Action(SocketReaction reaction);
         }
+        #endregion base
 
+        #region impl
         private sealed class ButtonTest : ButtonAction {
             private static readonly IEmote[] _emotes = new IEmote[] {
                 new Emoji("✅")
@@ -125,9 +130,9 @@ namespace SeraphinaNET.Services {
 
             protected sealed override Task Action(SocketReaction reaction) => reaction.Channel.DeleteMessageAsync(reaction.MessageId);
         }
+        #endregion impl
 
-        public ActionService(DataContextFactory data) { this.data = data; }
-
+        #region register
         private static readonly Action[] actions = new Action[] {
             new ButtonTest()
         };
@@ -135,6 +140,7 @@ namespace SeraphinaNET.Services {
         private static readonly Dictionary<string, int> aliases = new Dictionary<string, int> {
             ["button_test"] = 0,
         };
+        #endregion register
 
         private static Action GetAction(ActionData action) {
             return actions[action.ActionType]; // God forbid should the action id be out of range.
